@@ -30,7 +30,10 @@
         {% elif not ready %}
             <div class="alert alert-danger">{{ readiness_error }}</div>
         {% else %}
-            <form method="post" action="{% url 'start_quiz' quiz.id %}" class="vstack gap-3">
+            <div class="alert alert-warning">
+                This quiz must be taken in fullscreen mode. If you exit fullscreen 4 times, the quiz will be submitted automatically.
+            </div>
+            <form method="post" action="{% url 'start_quiz' quiz.id %}" class="vstack gap-3" id="start-quiz-form">
                 {% csrf_token %}
                 {% if quiz.access_code %}
                     <div>
@@ -38,9 +41,42 @@
                         <input class="form-control" type="text" name="{{ access_form.access_code.html_name }}" id="{{ access_form.access_code.id_for_label }}" required>
                     </div>
                 {% endif %}
-                <button class="btn btn-primary btn-lg" type="submit">Start quiz</button>
+                <div id="fullscreen-start-status" class="form-text" aria-live="polite"></div>
+                <button class="btn btn-primary btn-lg" type="submit" id="start-quiz-button">Enter fullscreen and start quiz</button>
             </form>
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const form = document.getElementById("start-quiz-form");
+    const button = document.getElementById("start-quiz-button");
+    const status = document.getElementById("fullscreen-start-status");
+    if (!form || !button) {
+        return;
+    }
+
+    form.addEventListener("submit", function (event) {
+        if (document.fullscreenElement || !document.documentElement.requestFullscreen) {
+            return;
+        }
+
+        event.preventDefault();
+        button.disabled = true;
+        status.textContent = "Requesting fullscreen...";
+        document.documentElement.requestFullscreen()
+            .then(function () {
+                status.textContent = "Fullscreen enabled. Starting quiz...";
+                form.submit();
+            })
+            .catch(function () {
+                button.disabled = false;
+                status.textContent = "Please allow fullscreen to start the quiz.";
+            });
+    });
+})();
+</script>
 {% endblock %}

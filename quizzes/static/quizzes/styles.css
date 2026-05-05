@@ -34,6 +34,21 @@ body {
     padding: 1.5rem;
 }
 
+.fullscreen-gate {
+    min-height: calc(100vh - 160px);
+    display: grid;
+    place-items: center;
+}
+
+.fullscreen-gate-panel {
+    width: min(100%, 560px);
+    background: #fff;
+    border: 1px solid #e3e7ee;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 16px 38px rgba(15, 23, 42, .08);
+}
+
 .timer-box {
     min-width: 160px;
     background: #101828;

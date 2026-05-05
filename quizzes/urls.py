@@ -21,6 +21,7 @@ urlpatterns = [
     path("attempts/<int:attempt_id>/question/<int:position>/", views.attempt_question, name="attempt_question"),
     path("attempts/<int:attempt_id>/save/", views.save_answer, name="save_answer"),
     path("attempts/<int:attempt_id>/tab-warning/", views.log_tab_switch, name="log_tab_switch"),
+    path("attempts/<int:attempt_id>/fullscreen-exit/", views.log_fullscreen_exit, name="log_fullscreen_exit"),
     path("attempts/<int:attempt_id>/submit/", views.submit_attempt, name="submit_attempt"),
     path("attempts/<int:attempt_id>/result/", views.result, name="result"),
     path("quizzes/<int:quiz_id>/leaderboard/", views.leaderboard, name="leaderboard"),

@@ -38,7 +38,7 @@
     <h2 class="h5 mb-3">All submitted attempts</h2>
     <div class="table-responsive">
         <table class="table table-striped align-middle mb-0">
-            <thead><tr><th>Student</th><th>Roll number</th><th>Quiz</th><th>Score</th><th>Time taken</th><th>Tab switches</th></tr></thead>
+            <thead><tr><th>Student</th><th>Roll number</th><th>Quiz</th><th>Score</th><th>Time taken</th><th>Tab switches</th><th>Fullscreen exits</th><th>Fullscreen auto-submit</th></tr></thead>
             <tbody>
             {% for attempt in attempts %}
                 <tr>
@@ -48,9 +48,11 @@
                     <td>{{ attempt.score }}</td>
                     <td>{{ attempt.time_taken }}</td>
                     <td>{{ attempt.tab_switch_count }}</td>
+                    <td>{{ attempt.fullscreen_exit_count }}</td>
+                    <td>{% if attempt.fullscreen_violation_submitted %}<span class="badge text-bg-danger">Yes</span>{% else %}<span class="text-secondary">No</span>{% endif %}</td>
                 </tr>
             {% empty %}
-                <tr><td colspan="6" class="text-center text-secondary py-4">No results yet.</td></tr>
+                <tr><td colspan="8" class="text-center text-secondary py-4">No results yet.</td></tr>
             {% endfor %}
             </tbody>
         </table>

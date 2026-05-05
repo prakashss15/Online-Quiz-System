@@ -110,6 +110,8 @@ class AttemptAdmin(admin.ModelAdmin):
         "end_time",
         "time_taken",
         "tab_switch_count",
+        "fullscreen_exit_count",
+        "fullscreen_violation_submitted",
         "is_submitted",
     )
     list_filter = ("quiz", "is_submitted", "start_time")
@@ -122,6 +124,8 @@ class AttemptAdmin(admin.ModelAdmin):
         "end_time",
         "time_taken",
         "tab_switch_count",
+        "fullscreen_exit_count",
+        "fullscreen_violation_submitted",
         "is_submitted",
         "question_order",
         "option_order",

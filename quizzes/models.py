@@ -84,6 +84,8 @@ class Attempt(models.Model):
     end_time = models.DateTimeField(blank=True, null=True)
     time_taken = models.DurationField(blank=True, null=True)
     tab_switch_count = models.PositiveIntegerField(default=0)
+    fullscreen_exit_count = models.PositiveIntegerField(default=0)
+    fullscreen_violation_submitted = models.BooleanField(default=False)
     is_submitted = models.BooleanField(default=False)
     question_order = models.JSONField(default=list, blank=True)
     option_order = models.JSONField(default=dict, blank=True)

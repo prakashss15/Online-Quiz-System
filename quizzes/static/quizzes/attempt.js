@@ -4,17 +4,50 @@
         return;
     }
 
-    const form = document.getElementById("answer-form");
+    const gate = document.getElementById("fullscreen-gate");
+    const attemptContent = document.getElementById("attempt-content");
+    const forms = Array.from(document.querySelectorAll(".question-step"));
     const submitForm = document.getElementById("submit-form");
-    const status = document.getElementById("save-status");
     const timer = document.getElementById("quiz-timer");
+    const questionCounter = document.getElementById("question-counter");
+    const questionProgress = document.getElementById("question-progress");
+    const progressBar = questionProgress.querySelector(".progress-bar");
+    const previousButton = document.getElementById("previous-question");
+    const nextButton = document.getElementById("next-question");
     const fullscreenButton = document.getElementById("fullscreen-button");
+    const fullscreenStatus = document.getElementById("fullscreen-status");
     const saveUrl = shell.dataset.saveUrl;
     const tabUrl = shell.dataset.tabUrl;
+    const fullscreenUrl = shell.dataset.fullscreenUrl;
     const resultUrl = shell.dataset.resultUrl;
-    const csrfToken = form.querySelector("input[name='csrfmiddlewaretoken']").value;
+    const csrfToken = shell.querySelector("input[name='csrfmiddlewaretoken']").value;
     let remaining = parseInt(timer.dataset.remaining, 10);
+    let currentPosition = Math.max(1, forms.findIndex(function (form) {
+        return !form.classList.contains("d-none");
+    }) + 1);
+    let fullscreenExitCount = parseInt(shell.dataset.fullscreenExitCount || "0", 10);
+    const fullscreenExitLimit = parseInt(shell.dataset.fullscreenExitLimit || "4", 10);
+    let hasEnteredFullscreen = Boolean(document.fullscreenElement);
+    let loggingFullscreenExit = false;
     let submitting = false;
+
+    function lockAttempt() {
+        gate.classList.remove("d-none");
+        attemptContent.classList.add("d-none");
+    }
+
+    function unlockAttempt() {
+        gate.classList.add("d-none");
+        attemptContent.classList.remove("d-none");
+    }
+
+    function updateFullscreenStatus(message) {
+        if (!fullscreenStatus) {
+            return;
+        }
+        const prefix = message || "Fullscreen is required.";
+        fullscreenStatus.querySelector("span").textContent = prefix + " Exits: " + fullscreenExitCount + "/" + fullscreenExitLimit + ". The quiz auto-submits after " + fullscreenExitLimit + " exits.";
+    }
 
     function requestFullscreen() {
         const element = document.documentElement;
@@ -44,8 +77,44 @@
         return false;
     }
 
-    function saveAnswer() {
+    function showQuestion(position) {
+        currentPosition = Math.min(Math.max(position, 1), forms.length);
+        forms.forEach(function (form, index) {
+            form.classList.toggle("d-none", index + 1 !== currentPosition);
+        });
+        questionCounter.textContent = "Question " + currentPosition + " of " + forms.length;
+        questionProgress.setAttribute("aria-valuenow", String(currentPosition));
+        progressBar.style.width = (currentPosition / forms.length * 100) + "%";
+        previousButton.classList.toggle("d-none", currentPosition === 1);
+        nextButton.classList.toggle("d-none", currentPosition === forms.length);
+        window.history.replaceState(null, "", "/attempts/" + shell.dataset.attemptId + "/question/" + currentPosition + "/");
+    }
+
+    function logFullscreenExit() {
+        if (loggingFullscreenExit || submitting) {
+            return;
+        }
+        loggingFullscreenExit = true;
+        postForm(fullscreenUrl, new FormData())
+            .then(function (payload) {
+                if (typeof payload.fullscreen_exit_count === "number") {
+                    fullscreenExitCount = payload.fullscreen_exit_count;
+                }
+                updateFullscreenStatus("You exited fullscreen.");
+                if (redirectIfExpired(payload)) {
+                    return;
+                }
+                loggingFullscreenExit = false;
+            })
+            .catch(function () {
+                updateFullscreenStatus("Fullscreen exit could not be logged. Re-enter fullscreen.");
+                loggingFullscreenExit = false;
+            });
+    }
+
+    function saveAnswer(form) {
         const selected = form.querySelector("input[name='option_id']:checked");
+        const status = form.querySelector(".save-status");
         if (!selected || submitting) {
             return;
         }
@@ -96,13 +165,34 @@
     });
 
     document.addEventListener("fullscreenchange", function () {
-        if (!document.fullscreenElement && !submitting) {
-            fullscreenButton.classList.remove("d-none");
+        if (document.fullscreenElement) {
+            hasEnteredFullscreen = true;
+            unlockAttempt();
+            updateFullscreenStatus("Fullscreen enabled.");
+            return;
+        }
+
+        lockAttempt();
+        updateFullscreenStatus("Fullscreen is off.");
+        if (hasEnteredFullscreen && !submitting) {
+            logFullscreenExit();
         }
     });
 
-    form.querySelectorAll("input[name='option_id']").forEach(function (input) {
-        input.addEventListener("change", saveAnswer);
+    forms.forEach(function (form) {
+        form.querySelectorAll("input[name='option_id']").forEach(function (input) {
+            input.addEventListener("change", function () {
+                saveAnswer(form);
+            });
+        });
+    });
+
+    previousButton.addEventListener("click", function () {
+        showQuestion(currentPosition - 1);
+    });
+
+    nextButton.addEventListener("click", function () {
+        showQuestion(currentPosition + 1);
     });
 
     fullscreenButton.addEventListener("click", requestFullscreen);
@@ -110,6 +200,12 @@
         submitting = true;
     });
 
-    requestFullscreen();
+    showQuestion(currentPosition);
+    updateFullscreenStatus(document.fullscreenElement ? "Fullscreen enabled." : "Fullscreen is off.");
+    if (document.fullscreenElement) {
+        unlockAttempt();
+    } else {
+        lockAttempt();
+    }
     tick();
 })();

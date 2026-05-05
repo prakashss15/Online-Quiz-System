@@ -28,6 +28,9 @@ from .forms import (
 from .models import Answer, Attempt, Option, Question, Quiz
 
 
+FULLSCREEN_EXIT_LIMIT = 4
+
+
 def _teacher_quiz_or_404(user, quiz_id):
     return get_object_or_404(Quiz, pk=quiz_id, teacher=user)
 
@@ -416,12 +419,28 @@ def attempt_question(request, attempt_id, position):
     if position < 1 or position > total_questions:
         raise Http404("Question page not found.")
 
-    question_id = question_ids[position - 1]
-    question = get_object_or_404(Question, pk=question_id, quiz=attempt.quiz)
-    option_ids = attempt.option_order.get(str(question_id), [])
-    options_by_id = Option.objects.in_bulk(option_ids)
-    options = [options_by_id[option_id] for option_id in option_ids if option_id in options_by_id]
-    selected_answer = Answer.objects.filter(attempt=attempt, question=question).first()
+    questions_by_id = Question.objects.filter(pk__in=question_ids, quiz=attempt.quiz).in_bulk()
+    answers_by_question = {
+        answer.question_id: answer
+        for answer in Answer.objects.filter(attempt=attempt).select_related("selected_option")
+    }
+    question_rows = []
+    for index, question_id in enumerate(question_ids, start=1):
+        question = questions_by_id.get(question_id)
+        if not question:
+            raise Http404("Question page not found.")
+        option_ids = attempt.option_order.get(str(question_id), [])
+        options_by_id = Option.objects.filter(question=question, pk__in=option_ids).in_bulk()
+        options = [options_by_id[option_id] for option_id in option_ids if option_id in options_by_id]
+        question_rows.append(
+            {
+                "position": index,
+                "question": question,
+                "options": options,
+                "selected_answer": answers_by_question.get(question.id),
+                "is_active": index == position,
+            }
+        )
     remaining_seconds = max(0, int((attempt.deadline - timezone.now()).total_seconds()))
 
     return render(
@@ -430,14 +449,11 @@ def attempt_question(request, attempt_id, position):
         {
             "attempt": attempt,
             "quiz": attempt.quiz,
-            "question": question,
-            "options": options,
-            "selected_answer": selected_answer,
+            "question_rows": question_rows,
             "position": position,
             "total_questions": total_questions,
             "remaining_seconds": remaining_seconds,
-            "previous_position": position - 1 if position > 1 else None,
-            "next_position": position + 1 if position < total_questions else None,
+            "fullscreen_exit_limit": FULLSCREEN_EXIT_LIMIT,
         },
     )
 
@@ -481,6 +497,41 @@ def log_tab_switch(request, attempt_id):
     attempt.tab_switch_count += 1
     attempt.save(update_fields=["tab_switch_count"])
     return JsonResponse({"logged": True, "tab_switch_count": attempt.tab_switch_count})
+
+
+@login_required
+@require_POST
+def log_fullscreen_exit(request, attempt_id):
+    attempt = get_object_or_404(Attempt.objects.select_related("quiz"), pk=attempt_id, user=request.user)
+    if not _ensure_active_attempt(attempt):
+        return JsonResponse({"logged": False, "expired": True, "redirect_url": reverse("result", args=[attempt.id])})
+
+    attempt.fullscreen_exit_count += 1
+    reached_limit = attempt.fullscreen_exit_count >= FULLSCREEN_EXIT_LIMIT
+    if reached_limit:
+        attempt.fullscreen_violation_submitted = True
+        attempt.save(update_fields=["fullscreen_exit_count", "fullscreen_violation_submitted"])
+        _finalize_attempt(attempt)
+        return JsonResponse(
+            {
+                "logged": True,
+                "expired": True,
+                "redirect_url": reverse("result", args=[attempt.id]),
+                "fullscreen_exit_count": attempt.fullscreen_exit_count,
+                "fullscreen_exit_limit": FULLSCREEN_EXIT_LIMIT,
+                "message": "Quiz submitted automatically after 4 fullscreen exits.",
+            }
+        )
+
+    attempt.save(update_fields=["fullscreen_exit_count"])
+    return JsonResponse(
+        {
+            "logged": True,
+            "expired": False,
+            "fullscreen_exit_count": attempt.fullscreen_exit_count,
+            "fullscreen_exit_limit": FULLSCREEN_EXIT_LIMIT,
+        }
+    )
 
 
 @login_required
@@ -540,6 +591,7 @@ def result(request, attempt_id):
             "correct_count": correct_count,
             "wrong_count": wrong_count,
             "percentage": percentage,
+            "fullscreen_exit_limit": FULLSCREEN_EXIT_LIMIT,
             "review_rows": review_rows,
         },
     )
@@ -776,6 +828,8 @@ def export_results_csv(request):
             "End time",
             "Time taken",
             "Tab switches",
+            "Fullscreen exits",
+            "Auto submitted for fullscreen exits",
         ]
     )
     attempts = (
@@ -800,6 +854,8 @@ def export_results_csv(request):
                 attempt.end_time,
                 attempt.time_taken,
                 attempt.tab_switch_count,
+                attempt.fullscreen_exit_count,
+                "Yes" if attempt.fullscreen_violation_submitted else "No",
             ]
         )
     return response
@@ -829,6 +885,8 @@ def export_quiz_results_csv(request, quiz_id):
             "End time",
             "Time taken",
             "Tab switches",
+            "Fullscreen exits",
+            "Auto submitted for fullscreen exits",
         ]
     )
     total_questions = quiz.questions.count()
@@ -857,6 +915,8 @@ def export_quiz_results_csv(request, quiz_id):
                 attempt.end_time,
                 attempt.time_taken,
                 attempt.tab_switch_count,
+                attempt.fullscreen_exit_count,
+                "Yes" if attempt.fullscreen_violation_submitted else "No",
             ]
         )
     return response

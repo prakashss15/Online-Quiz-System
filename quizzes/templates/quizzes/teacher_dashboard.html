@@ -77,7 +77,7 @@
     </div>
     <div class="table-responsive">
         <table class="table table-striped align-middle mb-0">
-            <thead><tr><th>Student</th><th>Roll number</th><th>Quiz</th><th>Score</th><th>Time taken</th><th>Tab switches</th></tr></thead>
+            <thead><tr><th>Student</th><th>Roll number</th><th>Quiz</th><th>Score</th><th>Time taken</th><th>Tab switches</th><th>Fullscreen exits</th></tr></thead>
             <tbody>
             {% for attempt in recent_attempts %}
                 <tr>
@@ -87,9 +87,10 @@
                     <td>{{ attempt.score }}</td>
                     <td>{{ attempt.time_taken }}</td>
                     <td>{{ attempt.tab_switch_count }}</td>
+                    <td>{{ attempt.fullscreen_exit_count }}</td>
                 </tr>
             {% empty %}
-                <tr><td colspan="6" class="text-center text-secondary py-4">No submitted attempts yet.</td></tr>
+                <tr><td colspan="7" class="text-center text-secondary py-4">No submitted attempts yet.</td></tr>
             {% endfor %}
             </tbody>
         </table>

@@ -16,8 +16,14 @@
 </div>
 
 <div class="alert alert-light border">
-    Correct: <strong>{{ correct_count }}</strong> · Wrong: <strong>{{ wrong_count }}</strong> · Tab switches: <strong>{{ attempt.tab_switch_count }}</strong>
+    Correct: <strong>{{ correct_count }}</strong> | Wrong: <strong>{{ wrong_count }}</strong> | Tab switches: <strong>{{ attempt.tab_switch_count }}</strong> | Fullscreen exits: <strong>{{ attempt.fullscreen_exit_count }}/{{ fullscreen_exit_limit }}</strong>
 </div>
+
+{% if attempt.fullscreen_violation_submitted %}
+    <div class="alert alert-danger">
+        This quiz was submitted automatically because fullscreen was exited {{ fullscreen_exit_limit }} times.
+    </div>
+{% endif %}
 
 <div class="d-flex gap-2 mb-3">
     <a class="btn btn-primary" href="{% url 'leaderboard' attempt.quiz.id %}">View leaderboard</a>
