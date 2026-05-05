@@ -1,0 +1,29 @@
+{% extends "quizzes/base.html" %}
+
+{% block main %}
+<div class="teacher-layout student-layout">
+    <aside class="teacher-sidebar student-sidebar">
+        <div class="teacher-sidebar-header">
+            <div class="teacher-sidebar-title">Student Panel</div>
+            <div class="teacher-sidebar-user">{{ user.get_full_name|default:user.email|default:user.username }}</div>
+        </div>
+        <nav class="teacher-nav" aria-label="Student navigation">
+            <a href="{% url 'student_dashboard' %}"><span>Dashboard</span></a>
+            <a href="{% url 'quiz_list' %}"><span>Available Quizzes</span></a>
+            <a href="{% url 'student_upcoming_quizzes' %}"><span>Upcoming Quizzes</span></a>
+            <a href="{% url 'student_results' %}"><span>My Results</span></a>
+            <a href="{% url 'student_leaderboards' %}"><span>Leaderboards</span></a>
+        </nav>
+    </aside>
+    <section class="teacher-content">
+        {% if messages %}
+            <div class="messages mb-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} mb-2" role="alert">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block student_content %}{% endblock %}
+    </section>
+</div>
+{% endblock %}

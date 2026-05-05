@@ -1,0 +1,23 @@
+{% extends "quizzes/base.html" %}
+
+{% block title %}{{ registration_heading|default:"Register" }} | Online Quiz System{% endblock %}
+
+{% block content %}
+<div class="auth-panel mx-auto">
+    <h1 class="h3 mb-3">{{ registration_heading|default:"Registration" }}</h1>
+    <form method="post" class="vstack gap-3">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div>
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <input class="form-control" type="{{ field.field.widget.input_type }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" {% if field.field.required %}required{% endif %}>
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <button class="btn btn-primary" type="submit">{{ submit_label|default:"Register" }}</button>
+    </form>
+    <p class="mt-3 mb-0">Already registered? <a href="{{ login_url }}">{{ login_label }}</a></p>
+</div>
+{% endblock %}

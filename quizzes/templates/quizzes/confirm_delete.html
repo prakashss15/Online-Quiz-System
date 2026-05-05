@@ -1,0 +1,15 @@
+{% extends "quizzes/teacher_base.html" %}
+
+{% block title %}Confirm delete | Online Quiz System{% endblock %}
+
+{% block teacher_content %}
+<div class="auth-panel mx-auto">
+    <h1 class="h4 mb-3">Delete confirmation</h1>
+    <p>Delete <strong>{{ object_name }}</strong>?</p>
+    <form method="post" class="d-flex gap-2">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Delete</button>
+        <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Cancel</a>
+    </form>
+</div>
+{% endblock %}

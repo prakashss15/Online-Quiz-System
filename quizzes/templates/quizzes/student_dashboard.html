@@ -1,0 +1,88 @@
+{% extends "quizzes/student_base.html" %}
+
+{% block title %}Student Dashboard | Online Quiz System{% endblock %}
+
+{% block student_content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <p class="eyebrow mb-1">Student Overview</p>
+        <h1 class="h2 mb-1">Dashboard</h1>
+        <p class="text-secondary mb-0">Track available quizzes, upcoming schedules, and your completed results.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'quiz_list' %}">Take quiz</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric metric-primary"><span>Available quizzes</span><strong>{{ active_quiz_count }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric metric-green"><span>Completed</span><strong>{{ completed_attempts.count }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric metric-amber"><span>Upcoming</span><strong>{{ upcoming_quizzes|length }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric metric-rose"><span>Total attempts</span><strong>{{ all_attempts.count }}</strong></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="section-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Available quizzes</h2>
+                <a href="{% url 'quiz_list' %}">View all</a>
+            </div>
+            <div class="row g-3">
+                {% for row in quiz_rows|slice:":2" %}
+                    <div class="col-md-6">
+                        <div class="card h-100 quiz-card">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                    <h3 class="h5 mb-0">{{ row.quiz.title }}</h3>
+                                    <span class="badge text-bg-secondary">{{ row.quiz.category }}</span>
+                                </div>
+                                <p class="text-secondary flex-grow-1">{{ row.quiz.description }}</p>
+                                <div class="small text-secondary mb-3">{{ row.quiz.time_limit }} min · Ends {{ row.quiz.end_time|date:"M d, H:i" }}</div>
+                                {% if row.attempt and row.attempt.is_submitted %}
+                                    <a class="btn btn-success" href="{% url 'result' row.attempt.id %}">View result</a>
+                                {% elif row.attempt %}
+                                    <a class="btn btn-warning" href="{% url 'attempt_question' row.attempt.id 1 %}">Resume</a>
+                                {% else %}
+                                    <a class="btn btn-primary" href="{% url 'quiz_instruction' row.quiz.id %}">Take quiz</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12"><div class="alert alert-info mb-0">No quizzes are available right now.</div></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="section-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Upcoming quizzes</h2>
+                <a href="{% url 'student_upcoming_quizzes' %}">View all</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Quiz</th><th>Starts</th></tr></thead>
+                    <tbody>
+                    {% for quiz in upcoming_quizzes %}
+                        <tr>
+                            <td>{{ quiz.title }}</td>
+                            <td>{{ quiz.start_time|date:"M d, H:i" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="2" class="text-center text-secondary py-3">No upcoming quizzes.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "quizzes/student_base.html" %}
+
+{% block title %}Upcoming Quizzes | Online Quiz System{% endblock %}
+
+{% block student_content %}
+<div class="mb-4">
+    <p class="eyebrow mb-1">Schedule</p>
+    <h1 class="h2 mb-1">Upcoming quizzes</h1>
+    <p class="text-secondary mb-0">Quizzes assigned to your class that will open later.</p>
+</div>
+
+<div class="section-panel">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+            <thead><tr><th>Quiz</th><th>Category</th><th>Class</th><th>Starts</th><th>Ends</th><th>Time limit</th></tr></thead>
+            <tbody>
+            {% for quiz in quizzes %}
+                <tr>
+                    <td>{{ quiz.title }}</td>
+                    <td>{{ quiz.category }}</td>
+                    <td>{{ quiz.year }} / {{ quiz.branch }} / {{ quiz.section }}</td>
+                    <td>{{ quiz.start_time|date:"M d, Y H:i" }}</td>
+                    <td>{{ quiz.end_time|date:"M d, Y H:i" }}</td>
+                    <td>{{ quiz.time_limit }} min</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-secondary py-4">No upcoming quizzes.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

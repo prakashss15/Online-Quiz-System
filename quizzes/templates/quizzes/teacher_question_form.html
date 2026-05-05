@@ -1,0 +1,30 @@
+{% extends "quizzes/teacher_base.html" %}
+
+{% block title %}{{ heading }} | {{ quiz.title }}{% endblock %}
+
+{% block teacher_content %}
+<div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <p class="eyebrow mb-1">Question Editor</p>
+        <h1 class="h2 mb-1">{{ heading }}</h1>
+        <p class="text-secondary mb-0">{{ quiz.title }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'teacher_question_list' quiz.id %}">Back</a>
+</div>
+
+<form method="post" class="question-panel vstack gap-3">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+        <div>
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+        </div>
+    {% endfor %}
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">{{ submit_label }}</button>
+        <a class="btn btn-outline-secondary" href="{% url 'teacher_question_list' quiz.id %}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

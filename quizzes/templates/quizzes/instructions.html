@@ -1,0 +1,46 @@
+{% extends "quizzes/base.html" %}
+
+{% block title %}{{ quiz.title }} | Online Quiz System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="mb-4">
+            <span class="badge text-bg-secondary mb-2">{{ quiz.category }}</span>
+            <h1 class="h2">{{ quiz.title }}</h1>
+            <p class="lead">{{ quiz.description }}</p>
+        </div>
+
+        <div class="list-group mb-4">
+            <div class="list-group-item d-flex justify-content-between"><span>Time limit</span><strong>{{ quiz.time_limit }} minutes</strong></div>
+            <div class="list-group-item d-flex justify-content-between"><span>Class</span><strong>{{ quiz.year }} / {{ quiz.branch }} / {{ quiz.section }}</strong></div>
+            <div class="list-group-item d-flex justify-content-between"><span>Start time</span><strong>{{ quiz.start_time|date:"M d, Y H:i" }}</strong></div>
+            <div class="list-group-item d-flex justify-content-between"><span>End time</span><strong>{{ quiz.end_time|date:"M d, Y H:i" }}</strong></div>
+            <div class="list-group-item d-flex justify-content-between"><span>Access code</span><strong>{% if quiz.access_code %}Required{% else %}Not required{% endif %}</strong></div>
+        </div>
+
+        {% if existing_attempt and existing_attempt.is_submitted %}
+            <div class="alert alert-success">You have already completed this quiz.</div>
+            <a class="btn btn-primary" href="{% url 'result' existing_attempt.id %}">View result</a>
+        {% elif existing_attempt %}
+            <div class="alert alert-warning">An attempt is already in progress.</div>
+            <a class="btn btn-warning" href="{% url 'attempt_question' existing_attempt.id 1 %}">Resume quiz</a>
+        {% elif not quiz.is_available %}
+            <div class="alert alert-secondary">This quiz is outside its scheduled availability window.</div>
+        {% elif not ready %}
+            <div class="alert alert-danger">{{ readiness_error }}</div>
+        {% else %}
+            <form method="post" action="{% url 'start_quiz' quiz.id %}" class="vstack gap-3">
+                {% csrf_token %}
+                {% if quiz.access_code %}
+                    <div>
+                        <label class="form-label" for="{{ access_form.access_code.id_for_label }}">Access code</label>
+                        <input class="form-control" type="text" name="{{ access_form.access_code.html_name }}" id="{{ access_form.access_code.id_for_label }}" required>
+                    </div>
+                {% endif %}
+                <button class="btn btn-primary btn-lg" type="submit">Start quiz</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

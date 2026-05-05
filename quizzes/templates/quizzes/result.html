@@ -1,0 +1,45 @@
+{% extends "quizzes/base.html" %}
+
+{% block title %}Result | {{ attempt.quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h2">{{ attempt.quiz.title }} result</h1>
+    <p class="text-secondary mb-0">Submitted at {{ attempt.end_time|date:"M d, Y H:i:s" }}</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3"><div class="metric"><span>Score</span><strong>{{ attempt.score }}</strong></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="metric"><span>Total questions</span><strong>{{ total_questions }}</strong></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="metric"><span>Percentage</span><strong>{{ percentage|floatformat:2 }}%</strong></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="metric"><span>Time taken</span><strong>{{ attempt.time_taken }}</strong></div></div>
+</div>
+
+<div class="alert alert-light border">
+    Correct: <strong>{{ correct_count }}</strong> · Wrong: <strong>{{ wrong_count }}</strong> · Tab switches: <strong>{{ attempt.tab_switch_count }}</strong>
+</div>
+
+<div class="d-flex gap-2 mb-3">
+    <a class="btn btn-primary" href="{% url 'leaderboard' attempt.quiz.id %}">View leaderboard</a>
+    <a class="btn btn-outline-secondary" href="{% url 'quiz_list' %}">Back to quizzes</a>
+</div>
+
+<h2 class="h4 mb-3">Review answers</h2>
+<div class="vstack gap-3">
+    {% for row in review_rows %}
+        <div class="card review-card {% if row.is_correct %}border-success{% else %}border-danger{% endif %}">
+            <div class="card-body">
+                <h3 class="h6">{{ forloop.counter }}. {{ row.question.text }}</h3>
+                <p class="mb-1">Your answer:
+                    {% if row.user_option %}
+                        <span class="{% if row.is_correct %}text-success{% else %}text-danger{% endif %} fw-semibold">{{ row.user_option.text }}</span>
+                    {% else %}
+                        <span class="text-danger fw-semibold">Not answered</span>
+                    {% endif %}
+                </p>
+                <p class="mb-0">Correct answer: <span class="text-success fw-semibold">{{ row.correct_option.text }}</span></p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

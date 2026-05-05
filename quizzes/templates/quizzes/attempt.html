@@ -1,0 +1,63 @@
+{% extends "quizzes/base.html" %}
+{% load static %}
+
+{% block title %}{{ quiz.title }} | Attempt{% endblock %}
+
+{% block content %}
+<div class="attempt-shell" data-attempt-id="{{ attempt.id }}" data-save-url="{% url 'save_answer' attempt.id %}" data-tab-url="{% url 'log_tab_switch' attempt.id %}" data-result-url="{% url 'result' attempt.id %}">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+        <div>
+            <h1 class="h3 mb-1">{{ quiz.title }}</h1>
+            <div class="text-secondary">Question {{ position }} of {{ total_questions }}</div>
+        </div>
+        <div class="timer-box" aria-live="polite">
+            <span class="timer-label">Time left</span>
+            <span id="quiz-timer" data-remaining="{{ remaining_seconds }}">--:--</span>
+        </div>
+    </div>
+
+    <div class="progress mb-4" role="progressbar" aria-valuenow="{{ position }}" aria-valuemin="1" aria-valuemax="{{ total_questions }}">
+        <div class="progress-bar" style="width: {% widthratio position total_questions 100 %}%"></div>
+    </div>
+
+    <form id="answer-form" class="question-panel">
+        {% csrf_token %}
+        <input type="hidden" name="question_id" value="{{ question.id }}">
+        <h2 class="h4 mb-4">{{ question.text }}</h2>
+        <div class="vstack gap-3">
+            {% for option in options %}
+                <label class="option-choice">
+                    <input type="radio" name="option_id" value="{{ option.id }}" {% if selected_answer and selected_answer.selected_option_id == option.id %}checked{% endif %}>
+                    <span>{{ option.text }}</span>
+                </label>
+            {% endfor %}
+        </div>
+        <div id="save-status" class="form-text mt-3" aria-live="polite"></div>
+    </form>
+
+    <div class="d-flex justify-content-between align-items-center gap-3 mt-4">
+        <div>
+            {% if previous_position %}
+                <a class="btn btn-outline-primary" href="{% url 'attempt_question' attempt.id previous_position %}">Previous</a>
+            {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+            {% if next_position %}
+                <a class="btn btn-primary" href="{% url 'attempt_question' attempt.id next_position %}">Next</a>
+            {% endif %}
+            <form method="post" action="{% url 'submit_attempt' attempt.id %}" id="submit-form">
+                {% csrf_token %}
+                <button class="btn btn-success" type="submit">Submit quiz</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="fullscreen-nudge mt-4">
+        <button class="btn btn-outline-dark btn-sm" type="button" id="fullscreen-button">Enter fullscreen</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'quizzes/attempt.js' %}"></script>
+{% endblock %}

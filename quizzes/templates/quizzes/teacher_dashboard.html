@@ -1,0 +1,98 @@
+{% extends "quizzes/teacher_base.html" %}
+
+{% block title %}Teacher Dashboard | Online Quiz System{% endblock %}
+
+{% block teacher_content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <p class="eyebrow mb-1">Overview</p>
+        <h1 class="h2 mb-1">Dashboard</h1>
+        <p class="text-secondary mb-0">Quick overview of your quizzes, students, and recent submissions.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary" href="{% url 'teacher_quiz_create' %}">Add quiz</a>
+        <a class="btn btn-success" href="{% url 'export_results_csv' %}">Export all results</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric metric-primary"><span>Total quizzes</span><strong>{{ total_quizzes }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric metric-green"><span>Active quizzes</span><strong>{{ active_quizzes }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric metric-amber"><span>Total attempts</span><strong>{{ analytics.total_attempts|default:0 }}</strong></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric metric-rose"><span>Average score</span><strong>{{ analytics.average_score|default:0|floatformat:2 }}</strong></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-5">
+        <div class="section-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Important details</h2>
+                <a href="{% url 'teacher_quiz_list' %}">View quizzes</a>
+            </div>
+            <div class="list-group list-group-flush">
+                <div class="list-group-item d-flex justify-content-between px-0"><span>Registered attempted students</span><strong>{{ students|length }}</strong></div>
+                <div class="list-group-item d-flex justify-content-between px-0"><span>Completed quiz windows</span><strong>{{ completed_quizzes }}</strong></div>
+                <div class="list-group-item d-flex justify-content-between px-0"><span>Upcoming quizzes</span><strong>{{ upcoming_quizzes|length }}</strong></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-7">
+        <div class="section-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Upcoming quizzes</h2>
+                <a href="{% url 'teacher_quiz_create' %}">Add quiz</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Quiz</th><th>Class</th><th>Starts</th></tr></thead>
+                    <tbody>
+                    {% for quiz in upcoming_quizzes %}
+                        <tr>
+                            <td>{{ quiz.title }}</td>
+                            <td>{{ quiz.year }} / {{ quiz.branch }} / {{ quiz.section }}</td>
+                            <td>{{ quiz.start_time|date:"M d, Y H:i" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="text-center text-secondary py-3">No upcoming quizzes.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section-panel mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Recent attempts</h2>
+        <a href="{% url 'teacher_results_overview' %}">View all results</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+            <thead><tr><th>Student</th><th>Roll number</th><th>Quiz</th><th>Score</th><th>Time taken</th><th>Tab switches</th></tr></thead>
+            <tbody>
+            {% for attempt in recent_attempts %}
+                <tr>
+                    <td>{{ attempt.user.get_full_name|default:attempt.user.username }}</td>
+                    <td>{{ attempt.user.student_profile.roll_number|default:"-" }}</td>
+                    <td>{{ attempt.quiz.title }}</td>
+                    <td>{{ attempt.score }}</td>
+                    <td>{{ attempt.time_taken }}</td>
+                    <td>{{ attempt.tab_switch_count }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-secondary py-4">No submitted attempts yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

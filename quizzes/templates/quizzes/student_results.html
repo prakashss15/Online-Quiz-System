@@ -1,0 +1,33 @@
+{% extends "quizzes/student_base.html" %}
+
+{% block title %}My Results | Online Quiz System{% endblock %}
+
+{% block student_content %}
+<div class="mb-4">
+    <p class="eyebrow mb-1">Performance</p>
+    <h1 class="h2 mb-1">My results</h1>
+    <p class="text-secondary mb-0">Review completed quizzes and scores.</p>
+</div>
+
+<div class="section-panel">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+            <thead><tr><th>Quiz</th><th>Score</th><th>Time taken</th><th>Submitted</th><th>Review</th><th>Leaderboard</th></tr></thead>
+            <tbody>
+            {% for attempt in attempts %}
+                <tr>
+                    <td>{{ attempt.quiz.title }}</td>
+                    <td>{{ attempt.score }}</td>
+                    <td>{{ attempt.time_taken }}</td>
+                    <td>{{ attempt.end_time|date:"M d, Y H:i" }}</td>
+                    <td><a class="btn btn-sm btn-outline-primary" href="{% url 'result' attempt.id %}">Review</a></td>
+                    <td><a class="btn btn-sm btn-outline-dark" href="{% url 'leaderboard' attempt.quiz.id %}">Open</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-secondary py-4">No completed quiz results yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

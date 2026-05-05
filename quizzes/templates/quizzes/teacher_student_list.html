@@ -1,0 +1,34 @@
+{% extends "quizzes/teacher_base.html" %}
+
+{% block title %}Students | Online Quiz System{% endblock %}
+
+{% block teacher_content %}
+<div class="mb-4">
+    <p class="eyebrow mb-1">Class Activity</p>
+    <h1 class="h2 mb-1">Students</h1>
+    <p class="text-secondary mb-0">Students who have attempted your quizzes.</p>
+</div>
+
+<div class="section-panel">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+            <thead><tr><th>Name</th><th>Roll number</th><th>Year</th><th>Branch</th><th>Section</th><th>Email</th><th>Attempts</th></tr></thead>
+            <tbody>
+            {% for student in students %}
+                <tr>
+                    <td>{{ student.get_full_name|default:student.username }}</td>
+                    <td>{{ student.student_profile.roll_number|default:"-" }}</td>
+                    <td>{{ student.student_profile.year|default:"-" }}</td>
+                    <td>{{ student.student_profile.branch|default:"-" }}</td>
+                    <td>{{ student.student_profile.section|default:"-" }}</td>
+                    <td>{{ student.email|default:"-" }}</td>
+                    <td>{{ student.total_attempts }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="text-center text-secondary py-4">No students have attempted your quizzes yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

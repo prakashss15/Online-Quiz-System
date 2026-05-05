@@ -1,0 +1,55 @@
+{% extends "quizzes/student_base.html" %}
+
+{% block title %}Available Quizzes | Online Quiz System{% endblock %}
+
+{% block student_content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <p class="eyebrow mb-1">Quiz Room</p>
+        <h1 class="h2 mb-1">Available quizzes</h1>
+        <p class="text-secondary mb-0">Quizzes currently open for your year, branch, and section.</p>
+    </div>
+    <form method="get" class="d-flex gap-2">
+        <select class="form-select" name="category" aria-label="Category filter">
+            {% for value, label in form.fields.category.choices %}
+                <option value="{{ value }}" {% if form.data.category == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-outline-primary" type="submit">Filter</button>
+    </form>
+</div>
+
+<div class="row g-3">
+    {% for row in quiz_rows %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card h-100 quiz-card">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <h2 class="h5 mb-0">{{ row.quiz.title }}</h2>
+                        <span class="badge text-bg-secondary">{{ row.quiz.category }}</span>
+                    </div>
+                    <p class="text-secondary flex-grow-1">{{ row.quiz.description }}</p>
+                    <dl class="row small mb-3">
+                        <dt class="col-5">Class</dt>
+                        <dd class="col-7">{{ row.quiz.year }} / {{ row.quiz.branch }} / {{ row.quiz.section }}</dd>
+                        <dt class="col-5">Time limit</dt>
+                        <dd class="col-7">{{ row.quiz.time_limit }} minutes</dd>
+                        <dt class="col-5">Ends</dt>
+                        <dd class="col-7">{{ row.quiz.end_time|date:"M d, Y H:i" }}</dd>
+                    </dl>
+                    {% if row.attempt and row.attempt.is_submitted %}
+                        <a class="btn btn-success" href="{% url 'result' row.attempt.id %}">View result</a>
+                    {% elif row.attempt %}
+                        <a class="btn btn-warning" href="{% url 'attempt_question' row.attempt.id 1 %}">Resume attempt</a>
+                    {% else %}
+                        <a class="btn btn-primary" href="{% url 'quiz_instruction' row.quiz.id %}">Take quiz</a>
+                    {% endif %}
+                    <a class="btn btn-link mt-2" href="{% url 'leaderboard' row.quiz.id %}">Leaderboard</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12"><div class="alert alert-info">No quizzes are available right now.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}
